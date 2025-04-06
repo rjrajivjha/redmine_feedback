@@ -1,0 +1,18 @@
+<!-- app/views/feedback/new.html.erb -->
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'feedback', :plugin => 'redmine_feedback' %>
+<% end %>
+
+<h2><%= l(:label_new_feedback) %></h2>
+
+<p><%= l(:text_feedback_for_issue, issue_id: @issue.id, issue_subject: @issue.subject) %></p>
+
+<% if User.current.admin? %>
+  <div class="box">
+    <p><strong>Debug info:</strong> Allowed status IDs: <%= Setting.plugin_redmine_feedback['allowed_status_ids'].inspect %>, Current status ID: <%= @issue.status_id %></p>
+  </div>
+<% end %>
+
+<%= render partial: 'form' %>
+
+

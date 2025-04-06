@@ -1,0 +1,130 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'feedback', :plugin => 'redmine_feedback' %>
+  <%= javascript_include_tag 'https://cdn.jsdelivr.net/npm/chart.js' %>
+<% end %>
+
+<div class="contextual">
+  <%= link_to l(:label_feedback_analytics_team), project_feedback_analytics_team_path(@project), class: 'icon icon-group' %>
+  <%= link_to l(:label_feedback_analytics_individual), project_feedback_analytics_individual_path(@project), class: 'icon icon-user' %>
+</div>
+
+<h2><%= l(:label_feedback_analytics) %></h2>
+
+<div class="splitcontent">
+  <div class="splitcontentleft">
+    <div class="box">
+      <h3><%= l(:label_feedback_project_summary) %></h3>
+      <% if @feedback_count > 0 %>
+        <p><strong><%= l(:label_feedback_count) %>:</strong> <%= @feedback_count %></p>
+        <!-- In your metrics display section -->
+        <div class="feedback-metrics">
+          <% metrics = Setting.plugin_redmine_feedback['feedback_metrics'] || [
+            {name: 'right_first_time', label: l(:label_feedback_accuracy), field_name: 'right_first_time'},
+            {name: 'on_time_delivery', label: l(:label_feedback_promptness), field_name: 'on_time_delivery'},
+            {name: 'targets_met', label: l(:label_feedback_targets), field_name: 'targets_met'},
+            {name: 'punched_above', label: l(:label_feedback_punched_above), field_name: 'punched_above'}
+          ] %>
+          
+          <% metrics.each do |metric| %>
+            <% metric_name = metric['name'] || metric[:name] %>
+            <% metric_label = metric['label'] || metric[:label] %>
+            <p><strong><%= metric_label %>:</strong> <%= format("%.1f", @project_averages[metric_name.to_sym]) %>/10</p>
+          <% end %>
+          <p><strong><%= l(:label_average_score) %>:</strong> <%= format("%.1f", @project_averages[:total]) %>/10</p>
+        </div>
+      <% else %>
+        <p><%= l(:label_no_feedback_yet) %></p>
+      <% end %>
+    </div>
+  </div>
+  
+  <div class="splitcontentright">
+    <div class="box">
+      <h3><%= l(:label_feedback_top_issues) %></h3>
+      <% if @top_issues.any? %>
+        <table class="list">
+          <thead>
+            <tr>
+              <th><%= l(:field_issue) %></th>
+              <th><%= l(:field_status) %></th>
+              <th><%= l(:label_average_score) %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @top_issues.each do |issue| %>
+              <tr>
+                <td><%= link_to "#{issue.tracker} ##{issue.id}: #{issue.subject}", issue_path(issue) %></td>
+                <td><%= issue.status.name %></td>
+                <td><%= format("%.1f", issue.feedback_aggregate.avg_total) %>/10</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p><%= l(:label_no_feedback_yet) %></p>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<% if @feedback_count > 0 %>
+  <div class="box">
+    <h3><%= l(:label_feedback_monthly_trend) %></h3>
+    <canvas id="monthlyTrendChart" width="400" height="200"></canvas>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+      
+      // Get metrics from settings
+      var metrics = <%= raw (Setting.plugin_redmine_feedback['feedback_metrics'] || [
+        {name: 'right_first_time', label: l(:label_feedback_accuracy), field_name: 'right_first_time'},
+        {name: 'on_time_delivery', label: l(:label_feedback_promptness), field_name: 'on_time_delivery'},
+        {name: 'targets_met', label: l(:label_feedback_targets), field_name: 'targets_met'},
+        {name: 'punched_above', label: l(:label_feedback_punched_above), field_name: 'punched_above'}
+      ]).to_json %>;
+      
+      // Define chart colors
+      var colors = [
+        { border: 'rgba(255, 99, 132, 1)', background: 'rgba(255, 99, 132, 0.2)' },
+        { border: 'rgba(54, 162, 235, 1)', background: 'rgba(54, 162, 235, 0.2)' },
+        { border: 'rgba(255, 206, 86, 1)', background: 'rgba(255, 206, 86, 0.2)' },
+        { border: 'rgba(75, 192, 192, 1)', background: 'rgba(75, 192, 192, 0.2)' },
+        { border: 'rgba(153, 102, 255, 1)', background: 'rgba(153, 102, 255, 0.2)' }
+      ];
+      
+      // Build datasets
+      var datasets = [];
+      metrics.forEach(function(metric, index) {
+        var name = metric.name || metric['name'];
+        var label = metric.label || metric['label'];
+        var colorIndex = index % colors.length;
+        
+        datasets.push({
+          label: label,
+          data: <%= raw @monthly_data.to_json %>[name],
+          borderColor: colors[colorIndex].border,
+          backgroundColor: colors[colorIndex].background,
+          tension: 0.1
+        });
+      });
+      
+      var monthlyTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: <%= raw @monthly_data[:months].to_json %>,
+          datasets: datasets
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 10
+            }
+          }
+        }
+      });
+    });
+  </script>
+<% end %>

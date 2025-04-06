@@ -1,0 +1,117 @@
+<p>
+  <label><%= l(:label_allowed_status_ids) %></label>
+  <% status_options = IssueStatus.all.collect {|s| [s.name, s.id.to_s]} %>
+  <%= select_tag 'settings[allowed_status_ids]', 
+                 options_for_select(status_options, @settings['allowed_status_ids']),
+                 multiple: true,
+                 size: [status_options.size, 10].min %>
+</p>
+<p class="info"><%= l(:text_allowed_status_ids_info) %></p>
+
+
+<fieldset class="box">
+  <legend><%= l(:label_company_values) %></legend>
+  <p class="info"><%= l(:text_company_values_info) %></p>
+  
+  <div id="company_values">
+    <% company_values = @settings['company_values'] || [] %>
+    <% company_values.each_with_index do |value, index| %>
+      <p class="company-value">
+        <%= text_field_tag "settings[company_values][]", value, size: 50 %>
+        <a href="#" class="icon icon-del delete-company-value"></a>
+      </p>
+    <% end %>
+    <% if company_values.empty? %>
+      <p class="company-value">
+        <%= text_field_tag "settings[company_values][]", "", size: 50 %>
+      </p>
+    <% end %>
+  </div>
+  
+  <p><%= link_to l(:button_add_company_value), "#", class: "icon icon-add", id: "add_company_value" %></p>
+</fieldset>
+
+
+
+<!-- Add this section to your settings form -->
+<fieldset class="box">
+  <legend><%= l(:label_feedback_metrics) %></legend>
+  <p class="info"><%= l(:text_feedback_metrics_info) %></p>
+  
+  <div id="feedback_metrics">
+    <% metrics = @settings['feedback_metrics'] || [
+      {name: 'right_first_time', label: l(:label_feedback_accuracy), field_name: 'right_first_time'},
+      {name: 'on_time_delivery', label: l(:label_feedback_promptness), field_name: 'on_time_delivery'},
+      {name: 'targets_met', label: l(:label_feedback_targets), field_name: 'targets_met'},
+      {name: 'punched_above', label: l(:label_feedback_punched_above), field_name: 'punched_above'}
+    ] %>
+    
+    <% metrics.each_with_index do |metric, index| %>
+      <p class="feedback-metric">
+        <%= text_field_tag "settings[feedback_metrics][][name]", metric[:name] || metric['name'], size: 20, placeholder: l(:label_internal_name) %>
+        <%= text_field_tag "settings[feedback_metrics][][label]", metric[:label] || metric['label'], size: 30, placeholder: l(:label_display_label) %>
+        <%= text_field_tag "settings[feedback_metrics][][field_name]", metric[:field_name] || metric['field_name'], size: 20, placeholder: l(:label_database_field) %>
+        <%= hidden_field_tag "settings[feedback_metrics][][original_field_name]", metric[:field_name] || metric['field_name'] %>
+        <span class="delete-button">
+          <%= link_to "Delete", "#", class: "delete-metric", 
+              data: { field: metric[:field_name] || metric['field_name'] },
+              style: "color: #990000; margin-left: 10px;" %>
+        </span>
+      </p>
+    <% end %>
+  </div>
+  
+  <p><%= link_to l(:button_add_metric), "#", class: "icon icon-add", id: "add_metric" %></p>
+</fieldset>
+
+<%= javascript_tag do %>
+  $(document).ready(function() {
+    // Company values handlers
+    $('#add_company_value').click(function(e) {
+      e.preventDefault();
+      var html = '<p class="company-value">' +
+                 '<input type="text" name="settings[company_values][]" size="50" value="" />' +
+                 '<a href="#" class="icon icon-del delete-company-value"></a>' +
+                 '</p>';
+      $('#company_values').append(html);
+    });
+    
+    $('#company_values').on('click', '.delete-company-value', function(e) {
+      e.preventDefault();
+      $(this).parent('.company-value').remove();
+    });
+    
+    // Feedback metrics handlers
+    $('#add_metric').click(function(e) {
+      e.preventDefault();
+      var html = '<p class="feedback-metric">' +
+                 '<input type="text" name="settings[feedback_metrics][][name]" size="20" placeholder="<%= j l(:label_internal_name) %>" value="" />' +
+                 '<input type="text" name="settings[feedback_metrics][][label]" size="30" placeholder="<%= j l(:label_display_label) %>" value="" />' +
+                 '<input type="text" name="settings[feedback_metrics][][field_name]" size="20" placeholder="<%= j l(:label_database_field) %>" value="" />' +
+                 '<input type="hidden" name="settings[feedback_metrics][][original_field_name]" value="" />' +
+                 '<span class="delete-button">' +
+                 '<a href="#" class="delete-metric" data-field="" style="color: #990000; margin-left: 10px;">Delete</a>' +
+                 '</span>' +
+                 '</p>';
+      $('#feedback_metrics').append(html);
+    });
+    
+    $('#feedback_metrics').on('click', '.delete-metric', function(e) {
+      e.preventDefault();
+      var fieldName = $(this).data('field');
+      var confirmMessage = '<%= j l(:text_metric_delete_confirmation) %>';
+      
+      if (fieldName) {
+        confirmMessage = '<%= j l(:text_metric_delete_confirmation_with_data) %>';
+      }
+      
+      if (confirm(confirmMessage)) {
+        // Add a hidden field to mark this metric for deletion
+        if (fieldName) {
+          $('form').append('<input type="hidden" name="settings[deleted_metrics][]" value="' + fieldName + '">');
+        }
+        $(this).closest('.feedback-metric').remove();
+      }
+    });
+  });
+<% end %>

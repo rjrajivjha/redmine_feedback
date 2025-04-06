@@ -1,0 +1,97 @@
+en:
+  # Add these translations
+  label_select_user: "Select User"
+  label_feedback_for_user: "Feedback for %{user}"
+  label_feedback_summary: "Feedback Summary"
+  button_apply: "Apply"
+  label_no_data: "No data available"
+  # Add these new translations
+  label_internal_name: "Internal name"
+  label_display_label: "Display label"
+  label_database_field: "Database field"
+  button_delete: "Delete"
+  text_metric_delete_confirmation: "Are you sure you want to delete this metric? This action cannot be undone."
+  text_metric_delete_confirmation_with_data: "WARNING: Deleting this metric will permanently remove all associated data from the database. This action cannot be undone. Are you sure you want to proceed?"
+  # Labels
+  # Add these missing translations
+  text_feedback_metrics_info: "Configure the metrics used for feedback evaluation. Each metric needs a name, display label, and corresponding database field."
+  button_add_metric: "Add Metric"
+  label_feedback_metrics: "Feedback Metrics"
+  
+  # You might also want to add these related translations if not already present
+  label_feedback_analytics: "Feedback Analytics"
+  label_feedback_analytics_project: "Project Analytics"
+  label_feedback_analytics_team: "Team Analytics"
+  label_feedback_analytics_individual: "Individual Analytics"
+  label_feedback_project_summary: "Project Summary"
+  label_feedback_count: "Total Feedback"
+  label_average_score: "Average Score"
+  label_feedback_monthly_trend: "Monthly Trend"
+  label_feedback_top_issues: "Top Issues by Feedback"
+  label_feedback_for_issue: "Feedback for issue %{issue}"
+  label_no_feedback_yet: "No feedback has been submitted yet."
+  label_feedback_team_comparison: "Team Comparison"
+  label_feedback_individual_comparison: "Individual Comparison"
+  label_team: "Team"
+  label_feedback: "Feedback"
+  label_view_all_feedback: "View All Feedback"
+  label_new_feedback: "New Feedback"
+  label_edit_feedback: "Edit Feedback"
+  label_feedback_list: "All Feedback"
+  label_feedback_details: "Feedback Details"
+  label_feedback_accuracy: "Right First Time (Accuracy)"
+  label_feedback_promptness: "On Time Delivery (Promptness)"
+  label_feedback_targets: "Targets Met"
+  label_feedback_punched_above: "Punched Above"
+  label_feedback_analytics: Feedback Analytics
+  label_feedback_analytics_project: Project Analytics
+  label_feedback_analytics_team: Team Analytics
+  label_feedback_analytics_individual: Individual Analytics
+  label_feedback_project_summary: Project Summary
+  label_feedback_monthly_trend: Monthly Trend
+  label_feedback_top_issues: Top Issues by Feedback
+  label_feedback_team_comparison: Team Comparison
+  label_feedback_individual_comparison: Individual Comparison
+  label_team: Team
+  label_feedback: Feedback
+  label_view_all_feedback: "View All Feedback"
+  label_new_feedback: New Feedback
+  label_edit_feedback: Edit Feedback
+  label_feedback_list: All Feedback
+  label_feedback_details: Feedback Details
+  label_feedback_accuracy: Right First Time (Accuracy)
+  label_feedback_promptness: On Time Delivery (Promptness)
+  label_feedback_targets: Targets Met
+  label_feedback_punched_above: Punched Above
+  label_values_described: Values Described by Assignee
+  label_accuracy_described: Accuracy
+  label_promptness_described: Promptness
+  label_targets_described: Targets
+  label_punched_above_described: Punched Above
+  label_average_score: Average Score
+  label_feedback_count: Feedback Count
+  label_no_feedback_yet: No feedback has been provided yet
+  label_allowed_status_ids: "Allowed Status IDs for Feedback"
+  label_company_values: Company Values
+  label_company_values_demonstrated: Company Values Demonstrated
+  # Notices
+  notice_feedback_created: Feedback was successfully created
+  notice_feedback_updated: Feedback was successfully updated
+  notice_feedback_deleted: Feedback was successfully deleted
+  notice_not_authorized_to_provide_feedback: "Only the issue creator and watchers can provide feedback."
+  notice_not_authorized_to_edit_feedback: You are not authorized to edit this feedback
+  notice_not_authorized_to_delete_feedback: You are not authorized to delete this feedback
+  notice_feedback_already_submitted: You have already submitted feedback for this issue
+  notice_feedback_not_allowed_for_status: "Feedback can only be provided when the issue is in certain statuses."
+
+  # Text
+  text_feedback_for_issue: "Providing feedback for issue #%{issue_id}: %{issue_subject}"
+  text_allowed_status_ids_info: "Select the issue statuses for which feedback can be provided."
+  text_company_values_info: "Add your company values below. One value per line."
+
+  # Buttons
+  button_add_feedback: Add Feedback
+  button_edit_feedback: Edit Feedback
+  button_delete_feedback: Delete Feedback
+  button_add_company_value: Add Company Value
+  text_individual_analytics_explanation: "This page shows analytics for feedback received on tasks assigned to the selected user. It includes all feedback provided by stakeholders, reporters, and other team members on the user's completed work."

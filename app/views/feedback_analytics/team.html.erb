@@ -1,0 +1,97 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'feedback', :plugin => 'redmine_feedback' %>
+  <%= javascript_include_tag 'https://cdn.jsdelivr.net/npm/chart.js' %>
+<% end %>
+
+<div class="contextual">
+  <%= link_to l(:label_feedback_analytics_project), project_feedback_analytics_path(@project), class: 'icon icon-projects' %>
+  <%= link_to l(:label_feedback_analytics_individual), project_feedback_analytics_individual_path(@project), class: 'icon icon-user' %>
+</div>
+
+<h2><%= l(:label_feedback_analytics_team) %></h2>
+
+<% if @team_averages.any? %>
+  <div class="box">
+    <h3><%= l(:label_feedback_team_comparison) %></h3>
+    <canvas id="teamComparisonChart" width="400" height="200"></canvas>
+  </div>
+
+  <div class="autoscroll">
+    <table class="list">
+      <thead>
+        <tr>
+          <th><%= l(:label_team) %></th>
+          <th><%= l(:label_feedback_accuracy) %></th>
+          <th><%= l(:label_feedback_promptness) %></th>
+          <th><%= l(:label_feedback_targets) %></th>
+          <th><%= l(:label_feedback_punched_above) %></th>
+          <th><%= l(:label_average_score) %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @team_averages.each do |team_name, averages| %>
+          <tr>
+            <td><%= team_name %></td>
+            <td><%= format("%.1f", averages[:right_first_time]) %>/10</td>
+            <td><%= format("%.1f", averages[:on_time_delivery]) %>/10</td>
+            <td><%= format("%.1f", averages[:targets_met]) %>/10</td>
+            <td><%= format("%.1f", averages[:punched_above]) %>/10</td>
+            <td><%= format("%.1f", averages[:total]) %>/10</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var ctx = document.getElementById('teamComparisonChart').getContext('2d');
+      var teamComparisonChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: <%= raw @team_averages.keys.to_json %>,
+          datasets: [
+            {
+              label: '<%= l(:label_feedback_accuracy) %>',
+              data: <%= raw @team_averages.values.map { |a| a[:right_first_time] }.to_json %>,
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
+            },
+            {
+              label: '<%= l(:label_feedback_promptness) %>',
+              data: <%= raw @team_averages.values.map { |a| a[:on_time_delivery] }.to_json %>,
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            },
+            {
+              label: '<%= l(:label_feedback_targets) %>',
+              data: <%= raw @team_averages.values.map { |a| a[:targets_met] }.to_json %>,
+              backgroundColor: 'rgba(255, 206, 86, 0.2)',
+              borderColor: 'rgba(255, 206, 86, 1)',
+              borderWidth: 1
+            },
+            {
+              label: '<%= l(:label_feedback_punched_above) %>',
+              data: <%= raw @team_averages.values.map { |a| a[:punched_above] }.to_json %>,
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 10
+            }
+          }
+        }
+      });
+    });
+  </script>
+<% else %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>

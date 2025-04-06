@@ -1,0 +1,83 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'feedback', :plugin => 'redmine_feedback' %>
+<% end %>
+
+<div class="contextual">
+  <%= link_to l(:button_back_to_issue), issue_path(@issue), class: 'icon icon-back' %>
+  <% if User.current.allowed_to?(:provide_feedback, @project) && 
+        (User.current == @issue.author || @issue.watcher_user_ids.include?(User.current.id)) %>
+    <% if Feedback.exists?(issue_id: @issue.id, user_id: User.current.id) %>
+      <% feedback = Feedback.find_by(issue_id: @issue.id, user_id: User.current.id) %>
+      <%= link_to l(:button_edit_feedback), edit_issue_feedback_path(@issue, feedback), class: 'icon icon-edit' %>
+    <% else %>
+      <%= link_to l(:button_add_feedback), new_issue_feedback_path(@issue), class: 'icon icon-add' %>
+    <% end %>
+  <% end %>
+</div>
+
+<h2><%= l(:label_feedback_for_issue, issue: "##{@issue.id}: #{@issue.subject}") %></h2>
+
+<% if @feedbacks.present? %>
+  <div class="autoscroll">
+    <table class="list">
+      <thead>
+        <tr>
+          <th><%= l(:field_user) %></th>
+          <th><%= l(:label_feedback_accuracy) %></th>
+          <th><%= l(:label_feedback_promptness) %></th>
+          <th><%= l(:label_feedback_targets) %></th>
+          <th><%= l(:label_feedback_punched_above) %></th>
+          <th><%= l(:label_average_score) %></th>
+          <th><%= l(:label_company_values_demonstrated) %></th>
+          <th><%= l(:field_comments) %></th>
+          <th><%= l(:field_created_on) %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @feedbacks.each do |feedback| %>
+          <tr>
+            <td><%= link_to_user feedback.user %></td>
+            <td><%= feedback.right_first_time %></td>
+            <td><%= feedback.on_time_delivery %></td>
+            <td><%= feedback.targets_met %></td>
+            <td><%= feedback.punched_above %></td>
+            <td><%= format("%.1f", feedback.average_score) %></td>
+            <td>
+              <% if feedback.company_values.present? %>
+                <ul class="company-values">
+                  <% feedback.company_values.each do |value| %>
+                    <li><%= value %></li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <em><%= l(:label_none) %></em>
+              <% end %>
+            </td>
+            <td>
+              <% if feedback.comments.present? %>
+                <%= truncate(feedback.comments, length: 100) %>
+              <% else %>
+                <em><%= l(:label_none) %></em>
+              <% end %>
+            </td>
+            <td><%= format_time(feedback.created_at) %></td>
+            <td class="buttons">
+              <% if feedback.user == User.current || User.current.admin? %>
+                <%= link_to l(:button_edit), edit_issue_feedback_path(@issue, feedback), class: 'icon icon-edit' %>
+                <%= link_to l(:button_delete), issue_feedback_path(@issue, feedback), 
+                            method: :delete, 
+                            data: { confirm: l(:text_are_you_sure) }, 
+                            class: 'icon icon-del' %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  
+  <span class="pagination"><%= pagination_links_full @feedback_pages, @feedback_count %></span>
+<% else %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>

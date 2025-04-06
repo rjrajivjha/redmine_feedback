@@ -1,0 +1,6 @@
+<!-- app/views/feedback/edit.html.erb -->
+<h2><%= l(:label_edit_feedback) %></h2>
+
+<p><%= l(:text_feedback_for_issue, issue_id: @issue.id, issue_subject: @issue.subject) %></p>
+
+<%= render partial: 'form' %>

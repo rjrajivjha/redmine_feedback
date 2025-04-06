@@ -1,0 +1,84 @@
+<% 
+  # Check if user can view feedback
+  if User.current.allowed_to?(:view_feedback, @project)
+    # Get the aggregate for this issue
+    aggregate = FeedbackAggregate.find_by(issue_id: @issue.id)
+    
+    # Check if user can provide feedback
+    can_provide = (User.current == @issue.author || @issue.watcher_user_ids.include?(User.current.id))
+    
+    # Check if user already provided feedback
+    already_provided = Feedback.exists?(issue_id: @issue.id, user_id: User.current.id)
+    feedback = already_provided ? Feedback.find_by(issue_id: @issue.id, user_id: User.current.id) : nil
+    
+    # Check if stakeholder field exists and if user is a stakeholder
+    stakeholder = false
+    if CustomField.exists?(name: 'Stakeholders')
+      stakeholder_field = CustomField.find_by(name: 'Stakeholders')
+      if @issue.custom_field_values.detect { |v| v.custom_field_id == stakeholder_field.id }&.value.present?
+        stakeholder_ids = @issue.custom_field_values.detect { |v| v.custom_field_id == stakeholder_field.id }.value.split(',').map(&:strip)
+        stakeholder = stakeholder_ids.include?(User.current.login)
+      end
+    end
+    
+    can_provide = can_provide || stakeholder
+%>
+
+<div class="box feedback-box">
+  <h3><%= l(:label_feedback) %></h3>
+  
+  <% if aggregate.present? && aggregate.feedback_count > 0 %>
+    <div class="feedback-summary">
+      <div class="splitcontent">
+        <div class="splitcontentleft">
+          <p><strong><%= l(:label_feedback_count) %>:</strong> <%= aggregate.feedback_count %></p>
+          <p><strong><%= l(:label_feedback_accuracy) %>:</strong> <%= format("%.1f", aggregate.avg_right_first_time) %>/10</p>
+          <p><strong><%= l(:label_feedback_promptness) %>:</strong> <%= format("%.1f", aggregate.avg_on_time_delivery) %>/10</p>
+        </div>
+        <div class="splitcontentright">
+          <p><strong><%= l(:label_feedback_targets) %>:</strong> <%= format("%.1f", aggregate.avg_targets_met) %>/10</p>
+          <p><strong><%= l(:label_feedback_punched_above) %>:</strong> <%= format("%.1f", aggregate.avg_punched_above) %>/10</p>
+          <p><strong><%= l(:label_average_score) %>:</strong> <%= format("%.1f", aggregate.avg_total) %>/10</p>
+        </div>
+      </div>
+        <% 
+        # Get all company values from all feedback for this issue
+        all_company_values = Feedback.where(issue_id: @issue.id).map(&:company_values).flatten.compact
+        company_value_counts = Hash.new(0)
+        all_company_values.each { |value| company_value_counts[value] += 1 }
+      %>
+      <% if company_value_counts.any? %>
+        <div class="company-values-summary">
+          <h4><%= l(:label_company_values_demonstrated) %></h4>
+          <div class="company-values-list">
+            <% company_value_counts.sort_by { |_, count| -count }.each do |value, count| %>
+              <span class="company-value-tag">
+                <%= value %> (<%= count %>)
+              </span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+    </div>
+  <% else %>
+    <p><%= l(:label_no_feedback_yet) %></p>
+  <% end %>
+  
+  <% if User.current.allowed_to?(:provide_feedback, @project) && can_provide %>
+    <div class="feedback-actions">
+      <% if already_provided %>
+        <%= link_to l(:button_edit_feedback), edit_issue_feedback_path(@issue, feedback), class: 'icon icon-edit' %>
+      <% else %>
+        <%= link_to l(:button_add_feedback), new_issue_feedback_path(@issue), class: 'icon icon-add' %>
+      <% end %>
+    </div>
+  <% end %>
+  
+  <% if User.current.allowed_to?(:view_feedback, @project) %>
+    <div class="feedback-details">
+      <p><%= link_to l(:label_view_all_feedback), issue_feedback_index_path(@issue), class: 'icon icon-list' %></p>
+    </div>
+  <% end %>
+</div>
+<% end %>

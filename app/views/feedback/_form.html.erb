@@ -1,0 +1,70 @@
+<%= form_for [@issue, @feedback], url: @feedback.new_record? ? issue_feedback_index_path(@issue) : issue_feedback_path(@issue, @feedback), html: { class: 'tabular' } do |f| %>
+  <%= error_messages_for @feedback %>
+  
+  <div class="box">
+    <fieldset>
+      <legend><%= l(:label_feedback_details) %></legend>
+      
+      <div class="splitcontent">
+        <% 
+          # Get metrics from settings
+          metrics = Setting.plugin_redmine_feedback['feedback_metrics'] || [
+            {name: 'right_first_time', label: l(:label_feedback_accuracy), field_name: 'right_first_time'},
+            {name: 'on_time_delivery', label: l(:label_feedback_promptness), field_name: 'on_time_delivery'},
+            {name: 'targets_met', label: l(:label_feedback_targets), field_name: 'targets_met'},
+            {name: 'punched_above', label: l(:label_feedback_punched_above), field_name: 'punched_above'}
+          ]
+          
+          # Split metrics into left and right columns
+          left_metrics = metrics.each_slice((metrics.size.to_f / 2).ceil).to_a[0] || []
+          right_metrics = metrics.each_slice((metrics.size.to_f / 2).ceil).to_a[1] || []
+        %>
+        
+        <div class="splitcontentleft">
+          <% left_metrics.each do |metric| %>
+            <% field_name = metric['field_name'] || metric[:field_name] %>
+            <% label_text = metric['label'] || metric[:label] %>
+            <p>
+              <%= f.label field_name.to_sym, label_text %>
+              <%= f.select field_name.to_sym, (1..10).to_a.collect { |n| [n, n] }, { include_blank: true }, required: true %>
+            </p>
+          <% end %>
+        </div>
+        
+        <div class="splitcontentright">
+          <% right_metrics.each do |metric| %>
+            <% field_name = metric['field_name'] || metric[:field_name] %>
+            <% label_text = metric['label'] || metric[:label] %>
+            <p>
+              <%= f.label field_name.to_sym, label_text %>
+              <%= f.select field_name.to_sym, (1..10).to_a.collect { |n| [n, n] }, { include_blank: true }, required: true %>
+            </p>
+          <% end %>
+        </div>
+      </div>
+    </fieldset>
+    
+    <% company_values = Setting.plugin_redmine_feedback['company_values'] || [] %>
+    <% if company_values.present? %>
+      <fieldset>
+        <legend><%= l(:label_company_values_demonstrated) %></legend>
+        
+        <div class="company-values-list">
+          <% company_values.each do |value| %>
+            <p>
+              <%= check_box_tag "feedback[company_values][]", value, false, id: "company_value_#{value.parameterize}" %>
+              <%= label_tag "company_value_#{value.parameterize}", value %>
+            </p>
+          <% end %>
+        </div>
+      </fieldset>
+    <% end %>
+    
+    <p>
+      <%= f.label :comments, l(:field_comments) %>
+      <%= f.text_area :comments, rows: 5, cols: 60, class: 'wiki-edit' %>
+    </p>
+  </div>
+  
+  <%= submit_tag l(@feedback.new_record? ? :button_create : :button_update) %>
+<% end %>

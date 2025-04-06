@@ -1,0 +1,75 @@
+# Redmine Feedback Plugin
+
+This plugin allows reporters, watchers, and stakeholders to provide feedback on any tracker type in Redmine.
+
+## Features
+
+- Four feedback metrics (scored out of 10):
+  - Right First Time (Accuracy)
+  - On Time Delivery (Promptness)
+  - Targets Met
+  - Punched Above
+- Checkboxes to mark which values were described by the assignee
+- Comments field (required when values are marked)
+- Feedback aggregation from child issues to parent issues
+- Comprehensive permission system
+- Clean UI integration
+
+## Requirements
+
+- Redmine 4.2.x or higher
+
+## Installation
+
+1. Clone this repository into your Redmine plugins directory:
+   ```
+   cd /path/to/redmine/plugins
+   git clone https://github.com/yourusername/redmine_feedback.git
+   ```
+
+2. Make sure the directory structure is correct:
+   ```
+   redmine_feedback/
+   ├── app/
+   ├── assets/
+   ├── config/
+   ├── db/
+   ├── lib/
+   ├── CHANGELOG.md
+   ├── README.md
+   └── init.rb
+   ```
+
+3. Run the migrations:
+   ```
+   cd /path/to/redmine
+   bundle exec rake redmine:plugins:migrate RAILS_ENV=production
+   ```
+
+4. Restart your Redmine server.
+
+5. Enable the plugin in your project settings:
+   - Go to Administration → Projects → Your Project → Modules
+   - Check "Feedback" to enable the module
+   - Set permissions in Administration → Roles and Permissions
+
+## Usage
+
+1. Navigate to an issue page.
+2. If you are a reporter, watcher, or stakeholder for the issue, you'll see a "Add Feedback" button.
+3. Fill out the feedback form with scores and comments.
+4. View feedback summaries on issue pages.
+5. Access all feedback for a project via the "Feedback" tab in the project menu.
+
+## Troubleshooting
+
+If you encounter any issues during installation:
+
+1. Make sure all files are in the correct directory structure.
+2. Check that the plugin directory is named `redmine_feedback` (not `redmine-feedback` or similar).
+3. Ensure your Redmine version is compatible.
+4. Check the Redmine logs for specific error messages.
+
+## License
+
+This plugin is licensed under the MIT License.

@@ -1,0 +1,175 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'feedback', :plugin => 'redmine_feedback' %>
+  <%= javascript_include_tag 'https://cdn.jsdelivr.net/npm/chart.js' %>
+  <%= javascript_include_tag 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js' %>
+  <%= stylesheet_link_tag 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css' %>
+<% end %>
+
+<div class="contextual">
+  <%= link_to l(:label_feedback_analytics), project_feedback_analytics_path(@project), class: 'icon icon-stats' %>
+  <%= link_to l(:label_feedback_analytics_team), project_feedback_analytics_team_path(@project), class: 'icon icon-group' %>
+</div>
+
+<h2><%= l(:label_feedback_analytics_individual) %></h2>
+
+<div class="box">
+  <h3><%= l(:label_select_user) %></h3>
+  <p>
+    <%= form_tag project_feedback_analytics_individual_path(@project), method: :get do %>
+      <%= select_tag 'user_id', 
+                     options_for_select(
+                       @project.users.sort_by(&:name).map { |u| [u.name, u.id] },
+                       params[:user_id] || User.current.id
+                     ),
+                     class: 'user-select',
+                     style: 'width: 300px;' %>
+      <%= submit_tag l(:button_apply), class: 'button-small' %>
+    <% end %>
+  </p>
+</div>
+
+
+
+<% if @selected_user %>
+  <h3><%= l(:label_feedback_for_user, user: @selected_user.name) %></h3>
+  
+  <div class="box">
+    <p class="info"><%= l(:text_individual_analytics_explanation) %></p>
+  </div>
+  
+  <div class="splitcontent">
+    <div class="splitcontentleft">
+      <div class="box">
+        <h3><%= l(:label_feedback_summary) %></h3>
+        <% if @feedback_count > 0 %>
+          <p><strong><%= l(:label_feedback_count) %>:</strong> <%= @feedback_count %></p>
+          <div class="feedback-metrics">
+            <% @metrics.each do |metric| %>
+              <% metric_name = metric['name'] || metric[:name] %>
+              <% metric_label = metric['label'] || metric[:label] %>
+              <p><strong><%= metric_label %>:</strong> <%= format("%.1f", @user_averages[metric_name.to_sym]) %>/10</p>
+            <% end %>
+            <p><strong><%= l(:label_average_score) %>:</strong> <%= format("%.1f", @user_averages[:total]) %>/10</p>
+          </div>
+        <% else %>
+          <p><%= l(:label_no_feedback_yet) %></p>
+        <% end %>
+      </div>
+    </div>
+    
+    <div class="splitcontentright">
+      <div class="box">
+        <h3><%= l(:label_feedback_top_issues) %></h3>
+        <% if @top_issues.any? %>
+          <table class="list">
+            <thead>
+              <tr>
+                <th><%= l(:field_issue) %></th>
+                <th><%= l(:field_status) %></th>
+                <th><%= l(:label_average_score) %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @top_issues.each do |issue| %>
+                <tr>
+                  <td><%= link_to "#{issue.tracker} ##{issue.id}: #{issue.subject}", issue_path(issue) %></td>
+                  <td><%= issue.status.name %></td>
+                  <td><%= format("%.1f", issue.feedback_aggregate.avg_total) %>/10</td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p><%= l(:label_no_feedback_yet) %></p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% if @feedback_count > 0 %>
+    <div class="box">
+      <h3><%= l(:label_feedback_monthly_trend) %></h3>
+      <canvas id="monthlyTrendChart" width="400" height="200"></canvas>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+        
+        // Get metrics from controller
+        var metrics = <%= raw @metrics.to_json %>;
+        
+        // Define chart colors
+        var colors = [
+          { border: 'rgba(255, 99, 132, 1)', background: 'rgba(255, 99, 132, 0.2)' },
+          { border: 'rgba(54, 162, 235, 1)', background: 'rgba(54, 162, 235, 0.2)' },
+          { border: 'rgba(255, 206, 86, 1)', background: 'rgba(255, 206, 86, 0.2)' },
+          { border: 'rgba(75, 192, 192, 1)', background: 'rgba(75, 192, 192, 0.2)' },
+          { border: 'rgba(153, 102, 255, 1)', background: 'rgba(153, 102, 255, 0.2)' }
+        ];
+        
+        // Build datasets
+        var datasets = [];
+        metrics.forEach(function(metric, index) {
+          var name = metric.name || metric['name'];
+          var label = metric.label || metric['label'];
+          var colorIndex = index % colors.length;
+          
+          datasets.push({
+            label: label,
+            data: <%= raw @monthly_data.to_json %>[name],
+            borderColor: colors[colorIndex].border,
+            backgroundColor: colors[colorIndex].background,
+            tension: 0.1
+          });
+        });
+        
+        var monthlyTrendChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: <%= raw @monthly_data[:months].to_json %>,
+            datasets: datasets
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 10
+              }
+            }
+          }
+        });
+        
+        // Initialize Select2 for user dropdown
+        $('.user-select').select2({
+          placeholder: "<%= l(:label_select_user) %>",
+          allowClear: true,
+          width: '100%'
+        });
+      });
+    </script>
+  <% else %>
+    <script>
+      $(document).ready(function() {
+        // Initialize Select2 for user dropdown
+        $('.user-select').select2({
+          placeholder: "<%= l(:label_select_user) %>",
+          allowClear: true,
+          width: '100%'
+        });
+      });
+    </script>
+  <% end %>
+<% else %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+  <script>
+    $(document).ready(function() {
+      // Initialize Select2 for user dropdown
+      $('.user-select').select2({
+        placeholder: "<%= l(:label_select_user) %>",
+        allowClear: true,
+        width: '100%'
+      });
+    });
+  </script>
+<% end %>

@@ -1,0 +1,22 @@
+# IDE and editor files
+/.idea/
+/.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*~
+
+# Ruby/Rails specific
+/.bundle/
+/log/*.log
+/tmp/
+.sass-cache/
+/coverage/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Local configuration
+/config/database.yml.local
+/config/configuration.yml.local
